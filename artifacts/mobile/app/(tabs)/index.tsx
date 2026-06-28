@@ -1,8 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
-  FlatList,
   Platform,
   Pressable,
   ScrollView,
@@ -15,92 +14,139 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CaseCard } from "@/components/CaseCard";
 import { SearchBar } from "@/components/SearchBar";
 import { SectionHeader } from "@/components/SectionHeader";
-import { courts, judgments, topics } from "@/constants/mockData";
+import { dailyUpdates, judgments } from "@/constants/mockData";
 import { useColors } from "@/hooks/useColors";
 
-const QUICK_FILTERS = ["Supreme Court", "High Courts", "Constitutional", "Criminal", "Civil", "Family"];
+const QUICK_FILTERS = [
+  { label: "Supreme Court", icon: "award" as const },
+  { label: "High Courts", icon: "landmark" as const },
+  { label: "Constitutional", icon: "shield" as const },
+  { label: "Criminal", icon: "alert-triangle" as const },
+  { label: "Family", icon: "heart" as const },
+  { label: "Property", icon: "home" as const },
+];
 
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const topInset = Platform.OS === "web" ? 67 : insets.top;
 
-  const recentCases = judgments.slice(0, 5);
-  const filteredCases = activeFilter
+  const displayCases = activeFilter
     ? judgments.filter(
         (j) =>
-          j.court.includes(activeFilter) ||
-          j.topic.some((t) => t.includes(activeFilter))
+          j.court.toLowerCase().includes(activeFilter.toLowerCase()) ||
+          j.topic.some((t) => t.toLowerCase().includes(activeFilter.toLowerCase()))
       )
-    : recentCases;
+    : judgments.slice(0, 5);
 
-  const topInset = Platform.OS === "web" ? 67 : insets.top;
+  const todayUpdates = dailyUpdates.filter((u) => u.isNew).slice(0, 3);
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
-      paddingTop: topInset + 12,
+      paddingTop: topInset + 10,
       paddingHorizontal: 16,
-      paddingBottom: 12,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      paddingBottom: 14,
+      backgroundColor: colors.primary,
     },
     brandRow: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 14,
+      marginBottom: 16,
     },
     brandLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-    logoBox: {
-      width: 34,
-      height: 34,
-      borderRadius: 8,
-      backgroundColor: colors.primary,
+    logoCircle: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      backgroundColor: "rgba(255,255,255,0.2)",
       alignItems: "center",
       justifyContent: "center",
     },
     brandName: {
-      fontSize: 18,
+      fontSize: 19,
       fontFamily: "Inter_700Bold",
-      color: colors.primary,
+      color: "#FFFFFF",
     },
     brandSub: {
-      fontSize: 12,
+      fontSize: 11,
       fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
+      color: "rgba(255,255,255,0.7)",
+      marginTop: 1,
     },
     notifBtn: {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: colors.secondary,
+      backgroundColor: "rgba(255,255,255,0.15)",
       alignItems: "center",
       justifyContent: "center",
     },
-    searchRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-    filterScroll: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-    },
-    filterBtn: {
+    searchWrap: {
+      backgroundColor: "rgba(255,255,255,0.15)",
+      borderRadius: 12,
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: 20,
-      marginRight: 8,
+      height: 46,
+      gap: 10,
+    },
+    searchPlaceholder: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      color: "rgba(255,255,255,0.75)",
+    },
+    aiAgentBanner: {
+      margin: 16,
+      borderRadius: 16,
+      overflow: "hidden",
+      backgroundColor: colors.card,
       borderWidth: 1,
+      borderColor: colors.border,
     },
-    filterText: {
-      fontSize: 13,
-      fontFamily: "Inter_500Medium",
+    bannerInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      gap: 14,
     },
-    content: { flex: 1 },
-    section: { paddingHorizontal: 16, paddingTop: 16 },
+    bannerIconWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    bannerContent: { flex: 1 },
+    bannerTitle: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+      color: colors.primary,
+    },
+    bannerSub: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 3,
+      lineHeight: 17,
+    },
+    bannerArrow: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     statsRow: {
       flexDirection: "row",
       gap: 10,
+      paddingHorizontal: 16,
       marginBottom: 20,
     },
     statCard: {
@@ -113,52 +159,62 @@ export default function HomeScreen() {
       alignItems: "center",
     },
     statNum: {
-      fontSize: 20,
+      fontSize: 18,
       fontFamily: "Inter_700Bold",
       color: colors.primary,
     },
     statLabel: {
+      fontSize: 10,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 3,
+      textAlign: "center",
+    },
+    filterScroll: { paddingHorizontal: 16, paddingBottom: 12 },
+    filterBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 22,
+      marginRight: 8,
+      borderWidth: 1,
+    },
+    filterText: { fontSize: 12, fontFamily: "Inter_500Medium" },
+    section: { paddingHorizontal: 16 },
+    updateCard: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      flexDirection: "row",
+      gap: 10,
+      alignItems: "flex-start",
+    },
+    updateLeft: {
+      width: 4,
+      borderRadius: 4,
+      backgroundColor: "#DC2626",
+      alignSelf: "stretch",
+      minHeight: 40,
+    },
+    updateTitle: {
+      flex: 1,
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.foreground,
+      lineHeight: 19,
+    },
+    updateMeta: {
       fontSize: 11,
       fontFamily: "Inter_400Regular",
       color: colors.mutedForeground,
-      marginTop: 2,
-      textAlign: "center",
+      marginTop: 4,
     },
-    bottomPad: {
-      height: Platform.OS === "web" ? 34 + 84 : 100,
-    },
-    highlightBanner: {
-      backgroundColor: colors.primary,
-      borderRadius: 14,
-      padding: 16,
-      marginBottom: 20,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    bannerLeft: { flex: 1 },
-    bannerTitle: {
-      fontSize: 15,
-      fontFamily: "Inter_700Bold",
-      color: "#FFFFFF",
-      marginBottom: 4,
-    },
-    bannerSub: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: "rgba(255,255,255,0.75)",
-    },
-    bannerBtn: {
-      backgroundColor: colors.saffron,
-      borderRadius: 8,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-    },
-    bannerBtnText: {
-      fontSize: 13,
-      fontFamily: "Inter_600SemiBold",
-      color: "#FFFFFF",
-    },
+    bottomPad: { height: Platform.OS === "web" ? 34 + 84 : 100 },
   });
 
   return (
@@ -166,7 +222,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <View style={styles.brandLeft}>
-            <View style={styles.logoBox}>
+            <View style={styles.logoCircle}>
               <Feather name="book-open" size={18} color="#FFFFFF" />
             </View>
             <View>
@@ -174,35 +230,72 @@ export default function HomeScreen() {
               <Text style={styles.brandSub}>Indian Legal Research</Text>
             </View>
           </View>
-          <Pressable style={styles.notifBtn} hitSlop={8}>
-            <Feather name="bell" size={18} color={colors.foreground} />
+          <Pressable
+            style={styles.notifBtn}
+            onPress={() => router.push("/(tabs)/updates")}
+            hitSlop={8}
+          >
+            <Feather name="bell" size={18} color="#FFFFFF" />
           </Pressable>
         </View>
-        <View style={styles.searchRow}>
-          <SearchBar
-            value=""
-            onChangeText={() => {}}
-            editable={false}
-            onPress={() => router.push("/search")}
-          />
-        </View>
+
+        <Pressable style={styles.searchWrap} onPress={() => router.push("/search")}>
+          <Feather name="search" size={17} color="rgba(255,255,255,0.75)" />
+          <Text style={styles.searchPlaceholder}>Search judgments, acts, citations...</Text>
+          <Feather name="mic" size={16} color="rgba(255,255,255,0.6)" />
+        </Pressable>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Pressable
+          style={({ pressed }) => [styles.aiAgentBanner, { opacity: pressed ? 0.9 : 1 }]}
+          onPress={() => router.push("/(tabs)/ai-chat")}
+        >
+          <View style={styles.bannerInner}>
+            <View style={styles.bannerIconWrap}>
+              <Feather name="cpu" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.bannerContent}>
+              <Text style={styles.bannerTitle}>BharatLaw AI Agent</Text>
+              <Text style={styles.bannerSub}>
+                Chat with your own legal AI — trained on 50K+ Indian judgments & statutes
+              </Text>
+            </View>
+            <View style={styles.bannerArrow}>
+              <Feather name="arrow-right" size={16} color="#FFFFFF" />
+            </View>
+          </View>
+        </Pressable>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNum}>50K+</Text>
+            <Text style={styles.statLabel}>Judgments</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNum}>25</Text>
+            <Text style={styles.statLabel}>High Courts</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNum}>700+</Text>
+            <Text style={styles.statLabel}>Bare Acts</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNum}>Daily</Text>
+            <Text style={styles.statLabel}>Updates</Text>
+          </View>
+        </View>
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterScroll}
         >
           {QUICK_FILTERS.map((f) => {
-            const active = activeFilter === f;
+            const active = activeFilter === f.label;
             return (
               <Pressable
-                key={f}
+                key={f.label}
                 style={[
                   styles.filterBtn,
                   {
@@ -210,15 +303,11 @@ export default function HomeScreen() {
                     borderColor: active ? colors.primary : colors.border,
                   },
                 ]}
-                onPress={() => setActiveFilter(active ? null : f)}
+                onPress={() => setActiveFilter(active ? null : f.label)}
               >
-                <Text
-                  style={[
-                    styles.filterText,
-                    { color: active ? "#FFFFFF" : colors.mutedForeground },
-                  ]}
-                >
-                  {f}
+                <Feather name={f.icon} size={13} color={active ? "#FFF" : colors.mutedForeground} />
+                <Text style={[styles.filterText, { color: active ? "#FFF" : colors.mutedForeground }]}>
+                  {f.label}
                 </Text>
               </Pressable>
             );
@@ -226,40 +315,31 @@ export default function HomeScreen() {
         </ScrollView>
 
         <View style={styles.section}>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>50K+</Text>
-              <Text style={styles.statLabel}>Judgments</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>700+</Text>
-              <Text style={styles.statLabel}>Bare Acts</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNum}>25</Text>
-              <Text style={styles.statLabel}>High Courts</Text>
-            </View>
-          </View>
-
-          <View style={styles.highlightBanner}>
-            <View style={styles.bannerLeft}>
-              <Text style={styles.bannerTitle}>AI-Powered Summaries</Text>
-              <Text style={styles.bannerSub}>
-                Get instant summaries of any judgment using AI
-              </Text>
-            </View>
-            <Pressable style={styles.bannerBtn} onPress={() => router.push("/search")}>
-              <Text style={styles.bannerBtnText}>Try now</Text>
+          <SectionHeader
+            title="Today's Updates"
+            icon="bell"
+            onSeeAll={() => router.push("/(tabs)/updates")}
+          />
+          {todayUpdates.map((u) => (
+            <Pressable
+              key={u.id}
+              style={({ pressed }) => [styles.updateCard, { opacity: pressed ? 0.85 : 1 }]}
+              onPress={() => router.push("/(tabs)/updates")}
+            >
+              <View style={styles.updateLeft} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.updateTitle} numberOfLines={2}>{u.title}</Text>
+                <Text style={styles.updateMeta}>{u.court} · {u.date}</Text>
+              </View>
             </Pressable>
-          </View>
+          ))}
 
           <SectionHeader
-            title={activeFilter ? `${activeFilter} Cases` : "Landmark Cases"}
+            title="Landmark Cases"
             icon="award"
             onSeeAll={() => router.push("/search")}
           />
-
-          {filteredCases.map((item) => (
+          {displayCases.map((item) => (
             <CaseCard key={item.id} item={item} />
           ))}
 

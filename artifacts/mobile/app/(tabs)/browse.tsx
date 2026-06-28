@@ -12,7 +12,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ActCard } from "@/components/ActCard";
-import { SectionHeader } from "@/components/SectionHeader";
 import { actCategories, bareActs, courts, topics } from "@/constants/mockData";
 import { useColors } from "@/hooks/useColors";
 
@@ -24,12 +23,31 @@ export default function BrowseScreen() {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<BrowseTab>("acts");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
   const topInset = Platform.OS === "web" ? 67 : insets.top;
 
   const filteredActs = selectedCategory
     ? bareActs.filter((a) => a.category === selectedCategory)
     : bareActs;
+
+  const scCourt = courts.find((c) => c.id === "sc");
+  const highCourts = courts.filter((c) => c.id !== "sc");
+
+  const topicIcons: Record<string, keyof typeof Feather.glyphMap> = {
+    "Constitutional Law": "shield",
+    "Criminal Law": "alert-triangle",
+    "Civil Law": "file-text",
+    "Family Law": "heart",
+    "Property Law": "home",
+    "Contract Law": "pen-tool",
+    "Labour Law": "users",
+    "Tax Law": "percent",
+    "Environmental Law": "wind",
+    "Intellectual Property": "cpu",
+    "Company Law": "briefcase",
+    "Banking & Finance": "dollar-sign",
+    Arbitration: "activity",
+    "Human Rights": "flag",
+  };
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -48,25 +66,16 @@ export default function BrowseScreen() {
       marginBottom: 14,
     },
     title: { fontSize: 22, fontFamily: "Inter_700Bold", color: colors.foreground },
-    tabRow: {
-      flexDirection: "row",
-      gap: 0,
-    },
+    tabRow: { flexDirection: "row" },
     tabBtn: {
       flex: 1,
       paddingVertical: 12,
       alignItems: "center",
       borderBottomWidth: 2,
     },
-    tabText: {
-      fontSize: 14,
-      fontFamily: "Inter_600SemiBold",
-    },
+    tabText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
     content: { flex: 1 },
-    categoryScroll: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-    },
+    categoryScroll: { paddingHorizontal: 16, paddingVertical: 12 },
     catBtn: {
       paddingHorizontal: 13,
       paddingVertical: 6,
@@ -76,43 +85,95 @@ export default function BrowseScreen() {
     },
     catText: { fontSize: 12, fontFamily: "Inter_500Medium" },
     list: { paddingHorizontal: 16, paddingTop: 4 },
+    sectionLabel: {
+      fontSize: 12,
+      fontFamily: "Inter_700Bold",
+      color: colors.mutedForeground,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+      marginHorizontal: 16,
+      marginTop: 16,
+      marginBottom: 8,
+    },
     courtCard: {
       backgroundColor: colors.card,
       borderRadius: 12,
-      padding: 16,
-      marginBottom: 10,
+      padding: 14,
+      marginHorizontal: 16,
+      marginBottom: 8,
       borderWidth: 1,
       borderColor: colors.border,
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
     },
-    courtIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+    courtIconWrap: {
+      width: 42,
+      height: 42,
+      borderRadius: 10,
       backgroundColor: colors.secondary,
       alignItems: "center",
       justifyContent: "center",
     },
+    courtInfo: { flex: 1 },
     courtName: {
-      fontSize: 14,
+      fontSize: 13,
       fontFamily: "Inter_600SemiBold",
       color: colors.foreground,
+      lineHeight: 18,
     },
-    courtSub: {
-      fontSize: 12,
+    courtMeta: {
+      fontSize: 11,
       fontFamily: "Inter_400Regular",
       color: colors.mutedForeground,
       marginTop: 2,
     },
-    chevron: { marginLeft: "auto" },
+    yearBadge: {
+      backgroundColor: colors.secondary,
+      borderRadius: 6,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+    },
+    yearText: {
+      fontSize: 11,
+      fontFamily: "Inter_500Medium",
+      color: colors.primary,
+    },
+    scCard: {
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      padding: 16,
+      marginHorizontal: 16,
+      marginBottom: 8,
+      marginTop: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+    },
+    scIconWrap: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: "rgba(255,255,255,0.2)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    scName: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+      color: "#FFFFFF",
+    },
+    scMeta: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: "rgba(255,255,255,0.75)",
+      marginTop: 2,
+    },
     topicGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 10,
-      paddingHorizontal: 16,
-      paddingTop: 16,
+      padding: 16,
     },
     topicCard: {
       width: "47%",
@@ -134,27 +195,8 @@ export default function BrowseScreen() {
       color: colors.mutedForeground,
       marginTop: 2,
     },
-    bottomPad: {
-      height: Platform.OS === "web" ? 34 + 84 : 100,
-    },
+    bottomPad: { height: Platform.OS === "web" ? 34 + 84 : 100 },
   });
-
-  const topicIcons: Record<string, keyof typeof Feather.glyphMap> = {
-    "Constitutional Law": "shield",
-    "Criminal Law": "alert-triangle",
-    "Civil Law": "file-text",
-    "Family Law": "heart",
-    "Property Law": "home",
-    "Contract Law": "pen-tool",
-    "Labour Law": "users",
-    "Tax Law": "percent",
-    "Environmental Law": "wind",
-    "Intellectual Property": "cpu",
-    "Company Law": "briefcase",
-    "Banking & Finance": "dollar-sign",
-    Arbitration: "activity",
-    "Human Rights": "flag",
-  };
 
   return (
     <View style={styles.container}>
@@ -167,20 +209,10 @@ export default function BrowseScreen() {
           {(["acts", "courts", "topics"] as BrowseTab[]).map((t) => (
             <Pressable
               key={t}
-              style={[
-                styles.tabBtn,
-                {
-                  borderBottomColor: tab === t ? colors.primary : "transparent",
-                },
-              ]}
+              style={[styles.tabBtn, { borderBottomColor: tab === t ? colors.primary : "transparent" }]}
               onPress={() => setTab(t)}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  { color: tab === t ? colors.primary : colors.mutedForeground },
-                ]}
-              >
+              <Text style={[styles.tabText, { color: tab === t ? colors.primary : colors.mutedForeground }]}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </Text>
             </Pressable>
@@ -196,25 +228,11 @@ export default function BrowseScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoryScroll}
             >
-              <Pressable
-                style={[
-                  styles.catBtn,
-                  {
-                    backgroundColor: !selectedCategory ? colors.primary : colors.card,
-                    borderColor: !selectedCategory ? colors.primary : colors.border,
-                  },
-                ]}
-                onPress={() => setSelectedCategory(null)}
-              >
-                <Text style={[styles.catText, { color: !selectedCategory ? "#FFF" : colors.mutedForeground }]}>
-                  All
-                </Text>
-              </Pressable>
-              {actCategories.map((c) => {
+              {[null, ...actCategories].map((c) => {
                 const active = selectedCategory === c;
                 return (
                   <Pressable
-                    key={c}
+                    key={c ?? "all"}
                     style={[
                       styles.catBtn,
                       {
@@ -222,10 +240,10 @@ export default function BrowseScreen() {
                         borderColor: active ? colors.primary : colors.border,
                       },
                     ]}
-                    onPress={() => setSelectedCategory(active ? null : c)}
+                    onPress={() => setSelectedCategory(c)}
                   >
                     <Text style={[styles.catText, { color: active ? "#FFF" : colors.mutedForeground }]}>
-                      {c}
+                      {c ?? "All"}
                     </Text>
                   </Pressable>
                 );
@@ -240,35 +258,55 @@ export default function BrowseScreen() {
         )}
 
         {tab === "courts" && (
-          <View style={styles.list}>
-            <View style={{ height: 16 }} />
-            {courts.map((court) => (
+          <>
+            {scCourt && (
+              <>
+                <Text style={styles.sectionLabel}>Apex Court</Text>
+                <Pressable
+                  style={({ pressed }) => [styles.scCard, { opacity: pressed ? 0.88 : 1 }]}
+                  onPress={() => router.push({ pathname: "/search", params: { court: scCourt.id } })}
+                >
+                  <View style={styles.scIconWrap}>
+                    <Feather name="award" size={22} color="#FFFFFF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.scName}>{scCourt.name}</Text>
+                    <Text style={styles.scMeta}>
+                      Est. {scCourt.established} · {scCourt.location}
+                    </Text>
+                    <Text style={[styles.scMeta, { marginTop: 2 }]}>
+                      Tap to browse judgments →
+                    </Text>
+                  </View>
+                </Pressable>
+              </>
+            )}
+
+            <Text style={styles.sectionLabel}>All 25 High Courts</Text>
+            {highCourts.map((court) => (
               <Pressable
                 key={court.id}
-                style={({ pressed }) => [
-                  styles.courtCard,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
+                style={({ pressed }) => [styles.courtCard, { opacity: pressed ? 0.85 : 1 }]}
                 onPress={() => router.push({ pathname: "/search", params: { court: court.id } })}
               >
-                <View style={styles.courtIcon}>
-                  <Feather name="landmark" size={20} color={colors.primary} />
+                <View style={styles.courtIconWrap}>
+                  <Feather name="landmark" size={18} color={colors.primary} />
                 </View>
-                <View>
+                <View style={styles.courtInfo}>
                   <Text style={styles.courtName}>{court.name}</Text>
-                  <Text style={styles.courtSub}>
-                    {court.state ?? "All India"} · View judgments
+                  <Text style={styles.courtMeta}>
+                    {court.location} · {court.state}
                   </Text>
                 </View>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={colors.mutedForeground}
-                  style={styles.chevron}
-                />
+                <View style={{ gap: 4, alignItems: "flex-end" }}>
+                  <View style={styles.yearBadge}>
+                    <Text style={styles.yearText}>Est. {court.established}</Text>
+                  </View>
+                  <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                </View>
               </Pressable>
             ))}
-          </View>
+          </>
         )}
 
         {tab === "topics" && (
@@ -276,10 +314,7 @@ export default function BrowseScreen() {
             {topics.map((topic) => (
               <Pressable
                 key={topic}
-                style={({ pressed }) => [
-                  styles.topicCard,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
+                style={({ pressed }) => [styles.topicCard, { opacity: pressed ? 0.85 : 1 }]}
                 onPress={() => router.push({ pathname: "/search", params: { topic } })}
               >
                 <Feather
@@ -289,7 +324,7 @@ export default function BrowseScreen() {
                 />
                 <Text style={styles.topicText}>{topic}</Text>
                 <Text style={styles.topicCount}>
-                  {Math.floor(Math.random() * 500 + 50)} cases
+                  {Math.floor(Math.random() * 3000 + 200)} cases
                 </Text>
               </Pressable>
             ))}
